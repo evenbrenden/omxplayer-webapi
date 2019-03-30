@@ -36,6 +36,7 @@ app.get('/start/:file', function (req, res) {
 });
 
 app.get('/stop', function (req, res) {
+
     if (!playing) {
         return;
     }
@@ -56,20 +57,24 @@ app.get('/list', function (req, res) {
 });
 
 app.get('/', function (req, res) {
+
     res.sendFile('index.html', {root: __dirname });
 });
 
 app.get('*', function (req, res) {
-    res.status(404).send('Unrecognised API call');
+
+    res.status(404).send('Unrecognized API call');
 });
 
 app.use(function (err, req, res, next) {
+
     if (req.xhr) {
-        res.status(500).send('Oops, Something went wrong!');
+        res.status(500).send('Something went wrong');
     } else {
         next(err);
     }
 });
 
-app.listen(3000);
-console.log('Listening on port 3000');
+let port = 3000;
+app.listen(port);
+console.log('Listening on port ' + port);
