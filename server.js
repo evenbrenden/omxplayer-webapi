@@ -5,6 +5,7 @@ let omx = require('node-omxplayer');
 let fs = require('fs');
 let os = require('os');
 let rpc = require('node-json-rpc');
+let msg = require('./helpers.js');
 
 // URL API
 
@@ -13,22 +14,22 @@ let urlServer = express();
 urlServer.get('/start/:file', function (req, res) {
 
     if (start(req.params.file)) {
-        res.status(200).send({ 'result': playingMesssage(req.params.file) });
+        res.status(200).send({ 'result': msg.play(req.params.file) });
     } else {
-        res.status(400).send({ 'result': noFileMesssage(req.params.file) });
+        res.status(400).send({ 'result': msg.noFile(req.params.file) });
     }
 });
 
 urlServer.get('/stop', function (req, res) {
 
     stop();
-    res.status(200).send({ 'result': stoppedMessage() });
+    res.status(200).send({ 'result': msg.stop() });
 });
 
 urlServer.get('/list', function (req, res) {
 
     let files = fs.readdirSync(folder);
-    console.log(listMessage(files));
+    console.log(msg.list(files));
     res.status(200).send({ 'result': files });
 });
 
@@ -72,9 +73,9 @@ rpcServer.addMethod('start', function (params, callback) {
 
     if ('file' in params) {
         if (start(params.file)) {
-            result = playingMesssage(params.file);
+            result = msg.play(params.file);
         } else {
-            result = noFileMesssage(params.file);
+            result = msg.noFile(params.file);
         }
     } else {
         error = { code: -32602, message: 'Invalid params' };
@@ -87,7 +88,7 @@ rpcServer.addMethod('stop', function (params, callback) {
 
     let error, result;
     stop();
-    result = stoppedMessage();
+    result = msg.stop();
     callback(error, result);
 });
 
@@ -95,7 +96,7 @@ rpcServer.addMethod('list', function (params, callback) {
 
     let error, result;
     let files = fs.readdirSync(folder);
-    console.log(listMessage(files));
+    console.log(msg.list(files));
     result = files;
     callback(error, result);
 });
@@ -117,7 +118,7 @@ function start(file) {
 
     let path = folder + file;
     if (!fs.existsSync(path)) {
-        console.log(noFileMesssage(file));
+        console.log(msg.noFile(file));
         return false;
     }
 
@@ -128,7 +129,7 @@ function start(file) {
     player = omx(path, output, loop);
     playing = true;
 
-    console.log(playingMesssage(file));
+    console.log(msg.play(file));
     return true;
 }
 
@@ -141,23 +142,5 @@ function stop() {
     player.quit();
     playing = false;
 
-    console.log(stoppedMessage());
-}
-
-// Helpers
-
-function playingMesssage(file) {
-    return 'Playing ' + file;
-}
-
-function stoppedMessage() {
-    return 'Stopped playback';
-}
-
-function noFileMesssage(file) {
-    return file + ' does not exist!';
-}
-
-function listMessage(files) {
-    return 'Available files: ' + files;
+    console.log(msg.stop());
 }
