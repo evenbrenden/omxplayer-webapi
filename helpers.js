@@ -2,20 +2,19 @@
 
 module.exports = {
 
-play: function playingMessage(file) {
-    return 'Playing ' + file;
-},
+    play: function playingMessage(file) {
+        return 'Playing ' + file;
+    },
 
-stop: function stoppedMessage() {
-    return 'Stopped playback';
-},
+    stop: function stoppedMessage() {
+        return 'Stopped playback';
+    },
 
-noFile : function noFileMessage(file) {
-    return file + ' does not exist!';
-},
+    noFile : function noFileMessage(file) {
+        return file + ' does not exist!';
+    },
 
-list : function listMessage(files) {
-    return 'Available files: ' + files;
-}
-
-}
+    list : function listMessage(files) {
+        return 'Available files: ' + files;
+    }
+};
