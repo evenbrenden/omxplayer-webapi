@@ -6,7 +6,7 @@ let fs = require('fs');
 let os = require('os');
 let rpc = require('node-json-rpc');
 
-// URL resource API
+// URL API
 
 let urlServer = express();
 
@@ -53,7 +53,7 @@ urlServer.use(function (err, req, res, next) {
 
 let urlPort = 3000;
 urlServer.listen(urlPort);
-console.log('URL resource server listening on port ' + urlPort);
+console.log('URL server listening on port ' + urlPort);
 
 // JSON-RPC API
 
