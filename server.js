@@ -1,11 +1,9 @@
 'use strict';
 
 let express = require('express');
-let omx = require('node-omxplayer');
-let fs = require('fs');
-let os = require('os');
 let rpc = require('node-json-rpc');
 let msg = require('./helpers.js');
+let omx = require('./omxcontrol.js');
 
 // URL API
 
@@ -13,22 +11,28 @@ let urlServer = express();
 
 urlServer.get('/start/:file', function (req, res) {
 
-    if (start(req.params.file)) {
-        res.status(200).send({ 'result': msg.play(req.params.file) });
+    if (omx.start(req.params.file)) {
+        let result = msg.play(req.params.file)
+        console.log(result);
+        res.status(200).send({ 'result': result });
     } else {
-        res.status(400).send({ 'result': msg.noFile(req.params.file) });
+        let result = msg.noFile(req.params.file)
+        console.log(result);
+        res.status(400).send({ 'result': result });
     }
 });
 
 urlServer.get('/stop', function (req, res) {
 
-    stop();
-    res.status(200).send({ 'result': msg.stop() });
+    omx.stop();
+    let result = msg.stop();
+    console.log(result);
+    res.status(200).send({ 'result': result });
 });
 
 urlServer.get('/list', function (req, res) {
 
-    let files = fs.readdirSync(folder);
+    let files = omx.files();
     console.log(msg.list(files));
     res.status(200).send({ 'result': files });
 });
@@ -59,6 +63,7 @@ console.log('URL server listening on port ' + urlPort);
 // JSON-RPC API
 
 let rpcOptions = {
+
     port: 4000,
     host: '127.0.0.1',
     path: '/',
@@ -71,8 +76,8 @@ rpcServer.addMethod('start', function (params, callback) {
 
     let error, result;
 
-    if ('file' in params) {
-        if (start(params.file)) {
+    if (params['file']) {
+        if (omx.start(params.file)) {
             result = msg.play(params.file);
         } else {
             result = msg.noFile(params.file);
@@ -81,66 +86,34 @@ rpcServer.addMethod('start', function (params, callback) {
         error = { code: -32602, message: 'Invalid params' };
     }
 
+    if (error) {
+        console.log(error);
+    } else {
+        console.log(result);
+    }
     callback(error, result);
 });
 
 rpcServer.addMethod('stop', function (params, callback) {
 
     let error, result;
-    stop();
+    omx.stop();
     result = msg.stop();
+    console.log(result);
     callback(error, result);
 });
 
 rpcServer.addMethod('list', function (params, callback) {
 
     let error, result;
-    let files = fs.readdirSync(folder);
-    console.log(msg.list(files));
+    let files = omx.files();
     result = files;
+    console.log(msg.list(result));
     callback(error, result);
 });
 
 rpcServer.start(function (error) {
+
     if (error) throw error;
     else console.log('JSON-RPC server listening on port ' + rpcOptions.port);
 });
-
-// omxplayer control
-
-let output = 'hdmi';
-let loop = true;
-let player;
-let playing= false;
-let folder = os.homedir() + '/Videos/';
-
-function start(file) {
-
-    let path = folder + file;
-    if (!fs.existsSync(path)) {
-        console.log(msg.noFile(file));
-        return false;
-    }
-
-    if (playing) {
-        player.quit();
-    }
-
-    player = omx(path, output, loop);
-    playing = true;
-
-    console.log(msg.play(file));
-    return true;
-}
-
-function stop() {
-
-    if (!playing) {
-        return;
-    }
-
-    player.quit();
-    playing = false;
-
-    console.log(msg.stop());
-}
