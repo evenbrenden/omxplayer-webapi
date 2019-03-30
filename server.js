@@ -4,8 +4,99 @@ let express = require('express');
 let omx = require('node-omxplayer');
 let fs = require('fs');
 let os = require('os');
+let rpc = require('node-json-rpc');
 
-let app = express();
+// URL resource API
+
+let urlServer = express();
+
+urlServer.get('/start/:file', function (req, res) {
+
+    if (start(req.params.file)) {
+        res.status(200).send({ 'result': playingMesssage(req.params.file) });
+    } else {
+        res.status(400).send({ 'result': noFileMesssage(req.params.file) });
+    }
+});
+
+urlServer.get('/stop', function (req, res) {
+
+    stop();
+    res.status(200).send({ 'result': stoppedMessage() });
+});
+
+urlServer.get('/list', function (req, res) {
+
+    let files = fs.readdirSync(folder);
+    console.log(files);
+    res.status(200).send({ 'videos': files });
+});
+
+urlServer.get('/', function (req, res) {
+
+    res.sendFile('index.html', { root: __dirname });
+});
+
+urlServer.get('*', function (req, res) {
+
+    res.status(404).send('Unrecognized API call');
+});
+
+urlServer.use(function (err, req, res, next) {
+
+    if (req.xhr) {
+        res.status(500).send('Something went wrong');
+    } else {
+        next(err);
+    }
+});
+
+let urlPort = 3000;
+urlServer.listen(urlPort);
+console.log('URL resource server listening on port ' + urlPort);
+
+// JSON-RPC API
+
+let rpcOptions = {
+    port: 4000,
+    host: '127.0.0.1',
+    path: '/',
+    strict: false
+};
+
+let rpcServer = new rpc.Server(rpcOptions);
+
+rpcServer.addMethod('start', function (params, callback) {
+
+    let error, result;
+
+    if ('file' in params) {
+        if (start(params.file)) {
+            result = playingMesssage(params.file);
+        } else {
+            result = noFileMesssage(params.file);
+        }
+    } else {
+        error = { code: -32602, message: 'Invalid params' };
+    }
+
+    callback(error, result);
+});
+
+rpcServer.addMethod('stop', function (params, callback) {
+
+    let error, result;
+    stop();
+    result = stoppedMessage();
+    callback(error, result);
+});
+
+rpcServer.start(function (error) {
+    if (error) throw error;
+    else console.log('JSON-RPC server listening on port ' + rpcOptions.port);
+});
+
+// omxplayer control
 
 let output = 'hdmi';
 let loop = true;
@@ -13,14 +104,12 @@ let player;
 let playing= false;
 let folder = os.homedir() + '/Videos/';
 
-app.get('/start/:file', function (req, res) {
+function start(file) {
 
-    let path = folder + req.params.file;
+    let path = folder + file;
     if (!fs.existsSync(path)) {
-        let message = req.params.file + ' does not exist!';
-        console.log(message);
-        res.status(400).send(message);
-        return;
+        console.log(noFileMesssage(file));
+        return false;
     }
 
     if (playing) {
@@ -30,12 +119,11 @@ app.get('/start/:file', function (req, res) {
     player = omx(path, output, loop);
     playing = true;
 
-    let message = 'Playing ' + req.params.file;
-    console.log(message);
-    res.status(200).send({"status": message});
-});
+    console.log(playingMesssage(file));
+    return true;
+}
 
-app.get('/stop', function (req, res) {
+function stop() {
 
     if (!playing) {
         return;
@@ -44,37 +132,19 @@ app.get('/stop', function (req, res) {
     player.quit();
     playing = false;
 
-    let message = 'Stopped playback';
-    console.log(message);
-    res.status(200).send({"status": message});
-});
+    console.log(stoppedMessage());
+}
 
-app.get('/list', function (req, res) {
+// Helpers
 
-    let files = fs.readdirSync(folder);
-    console.log(files);
-    res.status(200).send({"videos": files});
-});
+function playingMesssage(file) {
+    return 'Playing ' + file;
+}
 
-app.get('/', function (req, res) {
+function stoppedMessage() {
+    return 'Stopped playback';
+}
 
-    res.sendFile('index.html', {root: __dirname });
-});
-
-app.get('*', function (req, res) {
-
-    res.status(404).send('Unrecognized API call');
-});
-
-app.use(function (err, req, res, next) {
-
-    if (req.xhr) {
-        res.status(500).send('Something went wrong');
-    } else {
-        next(err);
-    }
-});
-
-let port = 3000;
-app.listen(port);
-console.log('Listening on port ' + port);
+function noFileMesssage(file) {
+    return file + ' does not exist!';
+}
