@@ -19,4 +19,5 @@ express, node-omxplayer, node-json-rpc
 ```
 { "jsonrpc": "2.0", "method": "play", "params": { "file": [file] } }
 { "jsonrpc": "2.0", "method": "stop" }
+{ "jsonrpc": "2.0", "method": "list" }
 ```

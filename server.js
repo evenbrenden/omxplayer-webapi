@@ -28,8 +28,8 @@ urlServer.get('/stop', function (req, res) {
 urlServer.get('/list', function (req, res) {
 
     let files = fs.readdirSync(folder);
-    console.log(files);
-    res.status(200).send({ 'videos': files });
+    console.log(listMessage(files));
+    res.status(200).send({ 'result': files });
 });
 
 urlServer.get('/', function (req, res) {
@@ -91,6 +91,15 @@ rpcServer.addMethod('stop', function (params, callback) {
     callback(error, result);
 });
 
+rpcServer.addMethod('list', function (params, callback) {
+
+    let error, result;
+    let files = fs.readdirSync(folder);
+    console.log(listMessage(files));
+    result = files;
+    callback(error, result);
+});
+
 rpcServer.start(function (error) {
     if (error) throw error;
     else console.log('JSON-RPC server listening on port ' + rpcOptions.port);
@@ -147,4 +156,8 @@ function stoppedMessage() {
 
 function noFileMesssage(file) {
     return file + ' does not exist!';
+}
+
+function listMessage(files) {
+    return 'Available files: ' + files;
 }

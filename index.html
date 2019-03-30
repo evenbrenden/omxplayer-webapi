@@ -25,7 +25,7 @@
             let response = await fetch('/list');
             handleBadResponse(response);
             let list = await response.json();
-            list.videos.forEach(video => videos.append(new Option(video, video)));
+            list.result.forEach(video => videos.append(new Option(video, video)));
         })();
 
     </script>
