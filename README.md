@@ -3,9 +3,7 @@ JSON-RPC API for the Raspberry Pi omxplayer. Node.js server with example browser
 
 ## Usage
 
-```
-node server.js
-```
+Run `node server.js` and visit your Raspberry Pi on port 3000.
 
 ## API
 
