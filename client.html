@@ -1,0 +1,48 @@
+<html>
+<body>
+    <select id="videos"></select>
+    <button id="play" onclick="play()">Play</button>
+    <button id="stop" onclick="stop()">Stop</button>
+    <script>
+
+        async function play() {
+            let message = { jsonrpc: "2.0", method: "start", params: { "file": videos.value }, id: 1 };
+            postJSONRPC(message);
+        }
+
+        async function stop() {
+            let message = { jsonrpc: "2.0", method: "stop", id: 2 };
+            postJSONRPC(message);
+        }
+
+        async function postJSONRPC(message) {
+            let body = JSON.stringify(message);
+            let response = await fetch("/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json-rpc",
+                    "Content-Length": body.length
+                },
+                body: body
+            });
+            handleBadResponse(response);
+            let answer = await response.json();
+            return answer;
+        }
+
+        function handleBadResponse(response) {
+            if (!response.ok) {
+                document.body.innerHTML = response.status;
+            }
+        }
+
+        (async () => {
+            let message = { jsonrpc: "2.0", method: "list", id: 3 };
+            let answer = await postJSONRPC(message);
+            answer.result.forEach(video => videos.append(new Option(video, video)));
+        })();
+
+    </script>
+</body>
+</html>
