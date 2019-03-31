@@ -1,10 +1,7 @@
 # omxplayer-webapi
-Simple Web APIs for the Raspberry Pi omxplayer. Node.js URL and JSON-RPC servers and an example browser client.
+Web API for the Raspberry Pi omxplayer. Node.js URL and JSON-RPC servers and an example browser client.
 
-## Requirements
-express, node-json-rpc, node-omxplayer
-
-## Usage
+## API
 
 ### URL
 
@@ -21,3 +18,12 @@ express, node-json-rpc, node-omxplayer
 { "jsonrpc": "2.0", "method": "stop" }
 { "jsonrpc": "2.0", "method": "list" }
 ```
+
+## Usage
+
+```
+node [url|rpc]server.js
+```
+
+## Requirements
+express, node-json-rpc, node-omxplayer
