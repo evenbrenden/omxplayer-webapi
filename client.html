@@ -5,8 +5,7 @@
     <button id="stop" onclick="stop()">Stop</button>
     <script>
 
-        let ip = 'localhost';
-        let url = 'ws://' + ip + ':8080/ws';
+        let url = 'ws://' + window.location.host + '/ws';
         let socket = new WebSocket(url);
         let playId = 1;
         let stopId = 2;
