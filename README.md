@@ -1,9 +1,9 @@
 # omxplayer-webapi
-HTTP JSON-RPC API for the Raspberry Pi omxplayer. Node.js server and example browser client.
+WebSocket JSON-RPC API for the Raspberry Pi omxplayer. Node.js server and example browser client.
 
 ## Usage
 
-Run `node server.js` and visit your Raspberry Pi on port 3000.
+Run `node server.js` and visit your Raspberry Pi on port 8080.
 
 ## API
 

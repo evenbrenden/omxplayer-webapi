@@ -1,15 +1,13 @@
 'use strict';
 
-let express = require('express');
-let omx = require('./omxcontrol.js');
+const omx = require('./omxcontrol.js');
+const http = require('http');
+const fs = require('fs');
+const ws = new require('ws');
 
-let app = express();
-app.use(express.json());
+const wss = new ws.Server({ noServer: true });
 
-app.post('/', function (req, res) {
-
-    let rpc = req.body;
-    let response;
+function handleRPC(res, rpc) {
 
     if (!rpc.hasOwnProperty('method')) {
         respond({ error: { code: -32601, message: 'Missing method' } }, rpc.id, res);
@@ -40,49 +38,59 @@ app.post('/', function (req, res) {
         default:
             respond({ error: { code: -32601, message: 'Invalid method' } }, rpc.id, res);
     }
-});
+}
 
 function respond(message, id, res) {
 
-    let code;
     if (message.hasOwnProperty('error')) {
         if (id) {
             message['id'] = id;
         } else {
             message['id'] = null;
         }
-        code = 400;
     } else {
         if (id) {
             message['id'] = id;
-            code = 200;
-        } else {
-            code = 204;
         }
     }
-    console.log(message);
-    res.status(code).send(message);
+    let reply = JSON.stringify(message);
+    console.log('< ' + reply);
+    res.send(reply);
 }
 
-app.get('/', function (req, res) {
+function accept(req, res) {
 
-    res.sendFile('client.html', { root: __dirname });
-});
-
-app.get('*', function (req, res) {
-
-    res.status(404).send('Unrecognized API call');
-});
-
-app.use(function (err, req, res, next) {
-
-	if (err instanceof SyntaxError) {
-        respond({ error: { code: -32700, message: 'Invalid data' } }, req.body.id, res);
+    if (req.url == '/ws' &&
+        req.headers.upgrade &&
+        req.headers.upgrade.toLowerCase() == 'websocket' &&
+        req.headers.connection.match(/\bupgrade\b/i))
+    {
+        wss.handleUpgrade(req, req.socket, Buffer.alloc(0), onSocketConnect);
+    } else if (req.url == '/') {
+        fs.createReadStream('./client.html').pipe(res);
     } else {
-        next(err);
+        res.writeHead(404);
+        res.end();
     }
-});
+}
 
-let port = 3000;
-app.listen(port);
-console.log('Listening on port ' + port);
+function onSocketConnect(ws) {
+
+    console.log(`New connection`);
+
+    ws.on('message', function(message) {
+
+        console.log('> ' + message);
+        let rpc = JSON.parse(message);
+        handleRPC(ws, rpc);
+    });
+
+    ws.on('close', function() {
+
+        console.log(`Connection closed`);
+    });
+}
+
+let port = 8080;
+console.log('Listening on ' + port);
+http.createServer(accept).listen(port);

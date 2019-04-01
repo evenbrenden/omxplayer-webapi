@@ -5,43 +5,36 @@
     <button id="stop" onclick="stop()">Stop</button>
     <script>
 
+        let url = 'ws://localhost:8080/ws';
+        let socket = new WebSocket(url);
+        let playId = 1;
+        let stopId = 2;
+        let listId = 3;
+
         async function play() {
-            let message = { jsonrpc: "2.0", method: "start", params: { "file": videos.value }, id: 1 };
-            postJSONRPC(message);
+            let message = { jsonrpc: "2.0", method: "start", params: { "file": videos.value }, id: playId };
+            socket.send(JSON.stringify(message));
         }
 
         async function stop() {
-            let message = { jsonrpc: "2.0", method: "stop", id: 2 };
-            postJSONRPC(message);
+            let message = { jsonrpc: "2.0", method: "stop", id: stopId };
+            socket.send(JSON.stringify(message));
         }
 
-        async function postJSONRPC(message) {
-            let body = JSON.stringify(message);
-            let response = await fetch("/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Accept": "application/json-rpc",
-                    "Content-Length": body.length
-                },
-                body: body
-            });
-            handleBadResponse(response);
-            let answer = await response.json();
-            return answer;
-        }
-
-        function handleBadResponse(response) {
-            if (!response.ok) {
-                document.body.innerHTML = response.status;
+        socket.onmessage = function(event) {
+            let message = JSON.parse(event.data);
+            console.log(message);
+            if (message.id == listId) {
+                message.result.forEach(video => videos.append(new Option(video, video)));
             }
+        };
+
+        socket.onopen = function(event) {
+            let message = { jsonrpc: "2.0", method: "list", id: listId };
+            socket.send(JSON.stringify(message));
         }
 
-        (async () => {
-            let message = { jsonrpc: "2.0", method: "list", id: 3 };
-            let answer = await postJSONRPC(message);
-            answer.result.forEach(video => videos.append(new Option(video, video)));
-        })();
+        socket.onclose = event => console.log('Closed ' + event.code);
 
     </script>
 </body>
