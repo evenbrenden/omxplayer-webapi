@@ -14,4 +14,4 @@ Run `node server.js` and visit your Raspberry Pi on port 8080.
 ```
 
 ## Requirements
-express, node-omxplayer
+ws, node-omxplayer
