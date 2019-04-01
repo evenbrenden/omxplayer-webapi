@@ -81,8 +81,16 @@ function onSocketConnect(ws) {
     ws.on('message', function(message) {
 
         console.log('> ' + message);
-        let rpc = JSON.parse(message);
-        handleRPC(ws, rpc);
+        try {
+            let rpc = JSON.parse(message);
+            handleRPC(ws, rpc);
+        } catch (e) {
+            if (e instanceof SyntaxError) {
+                respond({ error: { code: -32700, message: 'Invalid data' } }, undefined, ws);
+            } else {
+                throw e;
+            }
+        }
     });
 
     ws.on('close', function() {
