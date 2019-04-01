@@ -26,7 +26,7 @@ app.post('/', function (req, res) {
             if (omx.start(file)) {
                 respond({ 'result': 'Playing ' + file }, rpc.id, res);
             } else {
-                respond({ code: -32000, message: file + ' does not exist!' }, rpc.id, res);
+                respond({ error: { code: -32000, message: file + ' does not exist!' } }, rpc.id, res);
             }
             break;
         case 'stop':
@@ -38,7 +38,7 @@ app.post('/', function (req, res) {
             respond({ 'result': files }, rpc.id, res);
             break;
         default:
-            respond({ code: -32601, message: 'Invalid method' }, rpc.id, res);
+            respond({ error: { code: -32601, message: 'Invalid method' } }, rpc.id, res);
     }
 });
 
@@ -76,20 +76,11 @@ app.get('*', function (req, res) {
 
 app.use(function (err, req, res, next) {
 
-    if (req.xhr) {
-        res.status(500).send('Something went wrong');
+	if (err instanceof SyntaxError) {
+        respond({ error: { code: -32700, message: 'Invalid data' } }, req.body.id, res);
     } else {
         next(err);
     }
-});
-
-app.use(function (error, req, res, next) {
-
-	if (error instanceof SyntaxError) {
-		return res.status(500).send( { data : "Invalid data" } );
-	} else {
-		next();
-	}
 });
 
 let port = 3000;
