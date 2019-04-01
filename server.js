@@ -3,7 +3,7 @@
 const omx = require('./omxcontrol.js');
 const http = require('http');
 const fs = require('fs');
-const ws = new require('ws');
+const ws = require('ws');
 
 const wss = new ws.Server({ noServer: true });
 
@@ -76,7 +76,7 @@ function accept(req, res) {
 
 function onSocketConnect(ws) {
 
-    console.log(`New connection`);
+    console.log('New connection');
 
     ws.on('message', function(message) {
 
@@ -95,7 +95,7 @@ function onSocketConnect(ws) {
 
     ws.on('close', function() {
 
-        console.log(`Connection closed`);
+        console.log('Connection closed');
     });
 }
 
